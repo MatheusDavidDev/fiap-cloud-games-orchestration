@@ -1,0 +1,220 @@
+version: "3.9"
+
+name: "fcg-orchestration"
+
+services:
+
+  rabbitmq:
+
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+    environment:
+      RABBITMQ_DEFAULT_USER: fcgrabbtmq
+      RABBITMQ_DEFAULT_PASS: fcgrabbtmq
+
+    networks:
+      - fcg-network
+
+  # Usuarios DATABASE
+
+  users-db:
+
+    image: mcr.microsoft.com/mssql/server:2025-latest
+
+    environment:
+      SA_PASSWORD: "Sql@123456789"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+
+    volumes:
+      - users-data:/var/opt/mssql
+
+    ports:
+      - "1432:1433"
+
+    networks:
+      - fcg-network
+
+  # Usuarios API
+
+  users-api:
+
+    image: users-api:latest
+
+    ports:
+      - "5001:8080"
+
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=users-db;Database=Usuarios;User Id=sa;Password=Sql@123456789;TrustServerCertificate=True;Encrypt=False"
+      Jwt__Key: "uma-chave-grande-e-secreta-para-jwt"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__VirtualHost: "/"
+      RabbitMQ__Username: "fcgrabbtmq"
+      RabbitMQ__Password: "fcgrabbtmq"
+
+    depends_on:
+      - users-db
+      - rabbitmq
+
+    networks:
+      - fcg-network
+
+  # Catalogo DATABASE
+
+  catalog-db:
+
+    image: mcr.microsoft.com/mssql/server:2025-latest
+
+    environment:
+      SA_PASSWORD: "Sql@123456789"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+
+    volumes:
+      - catalog-data:/var/opt/mssql
+
+    ports:
+      - "1433:1433"
+
+    networks:
+      - fcg-network
+
+  # Calalogo API
+
+  catalog-api:
+
+    image: catalog-api:latest
+
+    ports:
+      - "5002:8080"
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=catalog-db;Database=Catalogo;User Id=sa;Password=Sql@123456789;TrustServerCertificate=True;Encrypt=False"
+      Jwt__Key: "uma-chave-grande-e-secreta-para-jwt"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__VirtualHost: "/"
+      RabbitMQ__Username: "fcgrabbtmq"
+      RabbitMQ__Password: "fcgrabbtmq"
+
+    depends_on:
+      - catalog-db
+      - rabbitmq
+
+
+    networks:
+      - fcg-network
+
+  # Pagamento DATABASE
+  
+  payments-db:
+
+    image: mcr.microsoft.com/mssql/server:2025-latest
+
+    environment:
+      SA_PASSWORD: "Sql@123456789"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      
+    volumes:
+      - payments-data:/var/opt/mssql
+
+    ports:
+      - "1434:1433"
+
+    networks:
+
+      - fcg-network
+
+  
+  # Pagamento API
+  
+
+  payments-api:
+
+    image: payments-api:latest
+
+    ports:
+      - "5003:8080"
+
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=payments-db;Database=pagamentos;User Id=sa;Password=Sql@123456789;TrustServerCertificate=True;Encrypt=False"
+      Jwt__Key: "uma-chave-grande-e-secreta-para-jwt"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__VirtualHost: "/"
+      RabbitMQ__Username: "fcgrabbtmq"
+      RabbitMQ__Password: "fcgrabbtmq"
+
+    depends_on:
+      - payments-db
+      - rabbitmq
+
+    networks:
+      - fcg-network
+  
+  # Notifications MONGO banco
+  
+  notification-db:
+
+    image: mongo:latest
+
+    restart: always
+
+    ports:
+      - "27017:27017"
+
+    command:
+      mongod --wiredTigerCacheSizeGB 0.25
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: senha-db12345
+
+    volumes:
+      - notification-data:/data/db
+
+    networks:
+      - fcg-network
+
+  # Notifications API
+
+  notification-api:
+
+    image: notification-api:latest
+
+    ports:
+      - "5004:8080"
+
+    environment:
+      MongoDb__ConnectionString: "mongodb://admin:senha-db12345@notification-db:27017/?authSource=admin"
+      MongoDb__DatabaseName: "Notifications"
+      Jwt__Key: "uma-chave-grande-e-secreta-para-jwt"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__VirtualHost: "/"
+      RabbitMQ__Username: "fcgrabbtmq"
+      RabbitMQ__Password: "fcgrabbtmq"
+
+
+    depends_on:
+      - notification-db
+      - rabbitmq
+
+    networks:
+      - fcg-network
+
+volumes:
+
+  users-data:
+
+  catalog-data:
+
+  payments-data:
+
+  notification-data:
+
+networks:
+
+  fcg-network:
+
+    name: fcg-network
