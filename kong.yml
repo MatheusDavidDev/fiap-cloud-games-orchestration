@@ -1,0 +1,110 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  # 1. USERS-API
+  - name: users-api-service
+    url: http://users-api:8080
+    routes:
+
+      - name: users-login-public
+        paths:
+          - /usuarios/auth/login
+        strip_path: false
+        path_handling: v1
+        plugins:
+          - name: request-transformer
+            config:
+              replace:
+                uri: /auth/login
+
+      - name: users-cadastrar-public
+        paths:
+          - /usuarios/auth/cadastrar
+        strip_path: false
+        path_handling: v1
+        plugins:
+          - name: request-transformer
+            config:
+              replace:
+                uri: /auth/cadastrar
+
+      - name: users-route
+        paths:
+          - /usuarios
+        plugins:
+          - name: jwt # Protegido por JWT
+        strip_path: true # Remove o '/usuarios' ao enviar para o .NET
+        path_handling: v1  
+
+      - name: users-scalar-route
+        paths:
+          - /users-scalar # Rota visual do Scalar mapeada no Program.cs
+          - /openapi/v1.json # Arquivo OpenAPI do .NET moderno
+        strip_path: false    # Mantém o prefixo para o .NET entender a rota
+        path_handling: v1    # OBRIGATÓRIO: Repassa sub-rotas (como /openapi.json, CSS, JS) sem quebrar
+        # Sem plugin JWT para carregar a documentação livremente
+
+  # 2. CATALOG-API
+  - name: catalog-api-service
+    url: http://catalog-api:8080
+    routes:
+      - name: catalog-route
+        paths:
+          - /catalogo
+        plugins:
+          - name: jwt # Protegido por JWT
+        strip_path: true 
+        path_handling: v1  
+
+      - name: catalog-scalar-route
+        paths:
+          - /catalog-scalar
+        strip_path: false    # Mantém o prefixo para o .NET entender a rota
+        path_handling: v1    # OBRIGATÓRIO: Repassa sub-rotas (como /openapi.json, CSS, JS) sem quebrar
+        # Sem plugin JWT
+
+  # 3. PAYMENTS-API
+  - name: payments-api-service
+    url: http://payments-api:8080
+    routes:
+      - name: payments-route
+        paths:
+          - /pagamentos # Rota assumida com base no nome do banco/projeto
+        plugins:
+          - name: jwt
+        strip_path: true
+        path_handling: v1  
+
+      - name: payments-scalar-route
+        paths:
+          - /payments-scalar
+        strip_path: false    # Mantém o prefixo para o .NET entender a rota
+        path_handling: v1    # OBRIGATÓRIO: Repassa sub-rotas (como /openapi.json, CSS, JS) sem quebrar
+        # Sem plugin JWT
+
+  # 4. NOTIFICATION-API
+  - name: notification-api-service
+    url: http://notification-api:8080
+    routes:
+      - name: notification-route
+        paths:
+          - /notificacoes
+        plugins:
+          - name: jwt
+        strip_path: true # Remove o '/usuarios' ao enviar para o .NET
+        path_handling: v1  
+
+      - name: notification-scalar-route
+        paths:
+          - /notification-scalar
+        strip_path: false    # Mantém o prefixo para o .NET entender a rota
+        path_handling: v1    # OBRIGATÓRIO: Repassa sub-rotas (como /openapi.json, CSS, JS) sem quebrar
+        # Sem plugin JWT
+
+# Define qual chave secreta o plugin de JWT deve usar para validar a assinatura do Token
+consumers:
+  - username: fcg-client
+    jwt_secrets:
+      - key: "fcg-auth-api" # Identificador livre. Se o seu JWT gerado tiver um 'iss', coloque o valor dele aqui
+        secret: "uma-chave-grande-e-secreta-para-jwt" # A mesma chave configurada no seu microsserviço

@@ -1,0 +1,21 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: fcg-consumer
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: fcg-client
+credentials:
+  - jwt-shared-secret
+
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: valida-jwt-plugin
+  namespace: default
+plugin: jwt
+config:
+  header_names:
+    - Authorization
