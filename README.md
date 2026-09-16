@@ -21,19 +21,25 @@ A comunicação entre os serviços utiliza:
 * RabbitMQ + MassTransit para comunicação assíncrona
 
 ```text
-                    ┌─────────────┐
-                    │  Users API  │
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │  RabbitMQ   │
-                    └──────┬──────┘
-                           │
-       ┌───────────────────┼───────────────────┐
-       │                   │                   │
-┌──────▼──────┐     ┌──────▼──────┐     ┌──────▼─────────┐
-│ Catalog API │     │ Payments API│     │Notifications API│
-└─────────────┘     └─────────────┘     └─────────────────┘
+                           ┌─────────────┐
+                           │  Users API  │
+                           └──────┬──────┘
+                                  │ (Publica UserCreatedEvent)
+                           ┌──────▼──────┐
+     ┌────────────────────>│  RabbitMQ   │<────────────────────┐
+     │ (Publica            └──────▲──────┘                     │
+     │  OrderPlacedEvent)         │                            │
+     │                            │ (Publica                   │ (Distribui
+     │                            │  PaymentProcessedEvent)    │  os eventos)
+┌────┴────────┐            ┌──────┴──────┐              ┌──────▼─────────┐
+│ Catalog API │            │ Payments API│              │Notifications API│
+└────▲────────┘            └──────┬──────┘              └────────────────┘
+     │                            │                             (Apenas consome
+     │ (Consome                   │ (Consome                     UserCreatedEvent e
+     │  PaymentProcessedEvent)    │  OrderPlacedEvent)           PaymentProcessedEvent)
+     └────────────────────────────┴─────────────────────────────┘
+
+
 ```
 
 ---
