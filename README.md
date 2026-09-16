@@ -149,7 +149,7 @@ kubectl delete -f k8s/
 
 ## ☁️ Fase 3 — API Gateway, Redis, Observabilidade e Notifications Lambda
 
-### API Gateway
+### Kong — API Gateway
 
 Foi implementado um **API Gateway** para centralizar o acesso aos microsserviços da aplicação.
 
