@@ -141,17 +141,43 @@ kubectl delete -f k8s/
 
 ---
 
-## ☁️ Fase 3 — Notifications Lambda
+## ☁️ Fase 3 — Redis,Observabilidade e Notifications Lambda
+
+### Redis — Cache na Catalog API
+
+Foi implementada uma camada de cache distribuído utilizando **Redis** na Catalog API.
+
+Como os dados do catálogo não sofrem alterações frequentes, as consultas podem ser armazenadas temporariamente no cache, reduzindo acessos repetitivos ao banco de dados e melhorando o tempo de resposta da aplicação.
+
+Também foi implementada a **invalidação do cache** sempre que informações do catálogo são alteradas, garantindo que os dados armazenados permaneçam atualizados.
+
+### Observabilidade — Prometheus e Grafana
+
+Para melhorar a visibilidade e o monitoramento da aplicação, foi implementada uma stack de observabilidade utilizando **Prometheus e Grafana**.
+
+O **Prometheus** é responsável pela coleta das métricas expostas pelos microsserviços, enquanto o **Grafana** permite visualizar essas informações por meio de dashboards.
+
+Entre as métricas monitoradas estão:
+
+* Quantidade de requisições
+* Latência das requisições
+* Códigos de status HTTP
+* Taxa de erros
+
+Com essa solução, é possível acompanhar o comportamento e o desempenho dos microsserviços em tempo real.
+
+### ☁️ Notifications Lambda 
 
 Como parte da evolução do projeto, a **Notifications API** também possui uma implementação utilizando **AWS Lambda**.
 
 A Lambda está em um repositório separado e utiliza:
 
-* AWS Lambda
-* Amazon MQ for RabbitMQ
-* MongoDB Atlas
-* Amazon ECR
-* Docker
+* AWS Lambda — Execução serverless sob demanda com escalabilidade automática.
+* Amazon MQ for RabbitMQ — Mensageria gerenciada para filas de notificações assíncronas.
+* Amazon ECR — Armazenamento seguro das imagens de contêiner da aplicação.
+* AWS Secrets Manager — Gerenciamento seguro de credenciais e chaves do projeto (como strings de conexão do MongoDB e acessos do RabbitMQ).
+* Docker — Padronização do ambiente de desenvolvimento e produção em contêineres.
+* MongoDB Atlas — Banco NoSQL em nuvem para armazenar logs e históricos.
 
 A implementação serverless não substitui a execução local da Notifications API neste repositório.
 
