@@ -141,7 +141,15 @@ kubectl delete -f k8s/
 
 ---
 
-## ☁️ Fase 3 — Redis,Observabilidade e Notifications Lambda
+## ☁️ Fase 3 — API Gateway, Redis, Observabilidade e Notifications Lambda
+
+### API Gateway
+
+Foi implementado um **API Gateway** para centralizar o acesso aos microsserviços da aplicação.
+
+O Gateway funciona como uma única porta de entrada para as APIs, sendo responsável pelo direcionamento das requisições e pelo controle de acesso aos endpoints.
+
+Foram configuradas rotas públicas para autenticação e cadastro de usuários, enquanto as demais rotas utilizam autenticação baseada em **JWT**.
 
 ### Redis — Cache na Catalog API
 
