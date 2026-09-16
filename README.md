@@ -1,117 +1,200 @@
-# FIAP Cloud Games - Microsserviços
+# FIAP Cloud Games - Orchestration
 
-## Sobre o Projeto
+Repositório responsável pela **orquestração e infraestrutura** do projeto FIAP Cloud Games.
 
-O FIAP Cloud Games é uma aplicação desenvolvida utilizando arquitetura baseada em microsserviços, com o objetivo de simular uma plataforma de venda e gerenciamento de jogos.
-
-A solução é composta por serviços independentes, cada um responsável por um domínio específico da aplicação, comunicando-se através de APIs REST e comunicação assíncrona utilizando RabbitMQ.
+O ambiente reúne os microsserviços, bancos de dados e infraestrutura necessária para execução local utilizando **Docker Compose** e **Kubernetes**.
 
 ---
 
-# Arquitetura
+## 🏗️ Arquitetura
 
-O projeto é composto pelos seguintes microsserviços:
+O projeto é composto pelos seguintes serviços:
 
-### Users API
+* **Users API** — gerenciamento e autenticação de usuários
+* **Catalog API** — gerenciamento do catálogo e compras
+* **Payments API** — processamento de pagamentos
+* **Notifications API** — processamento e armazenamento de notificações
 
-Responsável pelo gerenciamento dos usuários da plataforma.
+A comunicação entre os serviços utiliza:
 
-Principais responsabilidades:
-- Cadastro de usuários;
-- Autenticação utilizando JWT;
-- Controle de acesso e autorização.
+* APIs REST para comunicação síncrona
+* RabbitMQ + MassTransit para comunicação assíncrona
 
----
-
-### Catalog API
-
-Responsável pelo gerenciamento do catálogo de jogos e biblioteca dos usuários.
-
-Principais responsabilidades:
-- Cadastro e consulta de jogos;
-- Gerenciamento da biblioteca dos usuários;
-- Solicitação de compra de jogos.
-
----
-
-### Payments API
-
-Responsável pelo processamento dos pagamentos.
-
-Principais responsabilidades:
-- Receber solicitações de pagamento;
-- Simular aprovação ou reprovação;
-- Publicar eventos de pagamento.
+```text
+                    ┌─────────────┐
+                    │  Users API  │
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │  RabbitMQ   │
+                    └──────┬──────┘
+                           │
+       ┌───────────────────┼───────────────────┐
+       │                   │                   │
+┌──────▼──────┐     ┌──────▼──────┐     ┌──────▼─────────┐
+│ Catalog API │     │ Payments API│     │Notifications API│
+└─────────────┘     └─────────────┘     └─────────────────┘
+```
 
 ---
 
-### Notifications API
+## 📦 Serviços e Bancos
 
-Responsável pelo gerenciamento das notificações.
-
-Principais responsabilidades:
-- Consumir eventos dos outros serviços;
-- Registrar notificações dos usuários;
-- Simular envio de mensagens.
-
----
-
-# Comunicação entre Microsserviços
-
-A comunicação síncrona é realizada através de APIs REST.
-
-A comunicação assíncrona utiliza RabbitMQ juntamente com MassTransit através de eventos.
-
-Eventos utilizados:
-
-## UserCreatedEvent
-
-Publicado pela Users API após cadastro de um usuário.
-
-Consumido pela Notifications API para criação da notificação de boas-vindas.
+| Serviço           | Banco      |        Porta |
+| ----------------- | ---------- | -----------: |
+| Users API         | SQL Server |         5001 |
+| Catalog API       | SQL Server |         5002 |
+| Payments API      | SQL Server |         5003 |
+| Notifications API | MongoDB    |         5004 |
+| RabbitMQ          | —          | 5672 / 15672 |
 
 ---
 
-## OrderPlacedEvent
+## 📨 Comunicação por Eventos
 
-Publicado pela Catalog API ao iniciar uma compra.
+### UserCreatedEvent
 
-Consumido pela Payments API para processamento do pagamento.
+Publicado pela **Users API** após o cadastro de um usuário e consumido pela **Notifications API**.
 
----
+### OrderPlacedEvent
 
-## PaymentProcessedEvent
+Publicado pela **Catalog API** ao iniciar uma compra e consumido pela **Payments API**.
 
-Publicado pela Payments API após o processamento do pagamento.
+### PaymentProcessedEvent
 
-Consumido pela Catalog API para atualização da biblioteca do usuário.
+Publicado pela **Payments API** após o processamento do pagamento.
 
-Consumido pela Notifications API para criação da notificação de compra.
-
----
-
-# Tecnologias Utilizadas
-
-- .NET 9
-- ASP.NET Core Web API
-- Entity Framework Core
-- SQL Server
-- MongoDB
-- RabbitMQ
-- MassTransit
-- Docker
-- Docker Compose
-- Kubernetes
-- JWT Authentication
+O evento é consumido pelo **Catalog API** e pela **Notifications API**.
 
 ---
 
-# fiap-cloud-games-orchestration
-é o repositorio de orquestração e infraestrutura centralizada para o FIAP Cloud Games.
+## 🛠️ Tecnologias
 
-# Execução do Projeto
+* .NET 9
+* ASP.NET Core
+* Entity Framework Core
+* SQL Server
+* MongoDB
+* RabbitMQ
+* MassTransit
+* Docker
+* Docker Compose
+* Kubernetes
+* JWT
+* Kong API Gateway
+* Redis
 
-Para executar a aplicação localmente:
+---
+
+## 🐳 Docker Compose
+
+Para iniciar todo o ambiente local:
 
 ```bash
 docker compose up -d
+```
+
+Para verificar os containers:
+
+```bash
+docker compose ps
+```
+
+Para parar o ambiente:
+
+```bash
+docker compose down
+```
+
+Para iniciar novamente:
+
+```bash
+docker compose up -d
+```
+
+O ambiente local mantém a **Notifications API** e seu MongoDB para execução e testes do projeto.
+
+---
+
+## ☸️ Kubernetes
+
+O projeto também possui manifests Kubernetes para execução dos serviços.
+
+Aplicar os manifests:
+
+```bash
+kubectl apply -f k8s/
+```
+
+Verificar os recursos:
+
+```bash
+kubectl get pods
+kubectl get services
+```
+
+Para remover os recursos:
+
+```bash
+kubectl delete -f k8s/
+```
+
+---
+
+## ☁️ Fase 3 — Notifications Lambda
+
+Como parte da evolução do projeto, a **Notifications API** também possui uma implementação utilizando **AWS Lambda**.
+
+A Lambda está em um repositório separado e utiliza:
+
+* AWS Lambda
+* Amazon MQ for RabbitMQ
+* MongoDB Atlas
+* Amazon ECR
+* Docker
+
+A implementação serverless não substitui a execução local da Notifications API neste repositório.
+
+Repositório:
+
+**fiap-cloud-games-notifications-lambda**
+
+---
+
+## 📁 Estrutura
+
+```text
+fiap-cloud-games-orchestration/
+│
+├── k8s/
+│   └── Kubernetes manifests
+│
+├── docker-compose.yml
+├── README.md
+└── .gitignore
+```
+
+---
+
+## 🎓 FIAP Cloud Games
+
+Projeto desenvolvido durante a **Pós-graduação em Arquitetura de Sistemas .NET — FIAP**.
+
+O projeto aborda conceitos de:
+
+* Microsserviços
+* Clean Architecture
+* DDD
+* CQRS
+* Mensageria
+* RabbitMQ
+* MassTransit
+* Redis
+* Docker
+* Kubernetes
+* API Gateway
+* AWS Lambda
+* Amazon MQ
+* MongoDB Atlas
+
+---
