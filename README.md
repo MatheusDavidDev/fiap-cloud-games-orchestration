@@ -157,7 +157,7 @@ A implementação serverless não substitui a execução local da Notifications 
 
 Repositório:
 
-**fiap-cloud-games-notifications-lambda**
+**[fiap-cloud-games-notifications-lambda](https://github.com/MatheusDavidDev/fiap-cloud-games-notifications-lambda/tree/main)**
 
 ---
 
