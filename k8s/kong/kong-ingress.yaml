@@ -1,19 +1,68 @@
+
+# ==========================================
+# USERS API - LOGIN E CADASTRO (PÚBLICOS)
+# ==========================================
 apiVersion: networking.k8s.io/v1
 kind: Ingress
+metadata:
+  name: fcg-users-public
+  namespace: default
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/rewrite: "/auth/login"
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /usuarios/auth/login
+            pathType: Exact
+            backend:
+              service:
+                name: users-api
+                port:
+                  number: 8080
 
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fcg-users-register-public
+  namespace: default
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/rewrite: "/auth/cadastrar"
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /usuarios/auth/cadastrar
+            pathType: Exact
+            backend:
+              service:
+                name: users-api
+                port:
+                  number: 8080
+
+
+---
+# ==========================================
+# USERS E CATALOG - PROTEGIDOS POR JWT
+# ==========================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
   name: fcg-api-gateway
   namespace: default
   annotations:
     konghq.com/plugins: valida-jwt-plugin
-
+    konghq.com/strip-path: "true"
 spec:
   ingressClassName: kong
-
   rules:
     - http:
         paths:
-
           - path: /usuarios
             pathType: Prefix
             backend:
@@ -23,6 +72,38 @@ spec:
                   number: 8080
 
           - path: /catalogo
+            pathType: Prefix
+            backend:
+              service:
+                name: catalog-api
+                port:
+                  number: 8080
+
+---
+# ==========================================
+# DOCUMENTAÇÃO SCALAR (PÚBLICA)
+# ==========================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fcg-scalar
+  namespace: default
+  annotations:
+    konghq.com/strip-path: "false"
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /users-scalar
+            pathType: Prefix
+            backend:
+              service:
+                name: users-api
+                port:
+                  number: 8080
+
+          - path: /catalog-scalar
             pathType: Prefix
             backend:
               service:

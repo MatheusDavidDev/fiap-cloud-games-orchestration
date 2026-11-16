@@ -1,5 +1,3 @@
-version: "3.9"
-
 name: "fcg-orchestration"
 
 services:
@@ -12,20 +10,20 @@ services:
       - "15672:15672"
 
     environment:
-      RABBITMQ_DEFAULT_USER: fcgrabbtmq
-      RABBITMQ_DEFAULT_PASS: fcgrabbtmq
+      RABBITMQ_DEFAULT_USER: "fcgrabbtmq"
+      RABBITMQ_DEFAULT_PASS: "fcgrabbtmq"
+
 
     networks:
       - fcg-network
 
   # Usuarios DATABASE
-
   users-db:
 
     image: mcr.microsoft.com/mssql/server:2025-latest
 
     environment:
-      SA_PASSWORD: "Sql@123456789"
+      SA_PASSWORD: ${SQL_SA_PASSWORD}
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
 
@@ -39,7 +37,6 @@ services:
       - fcg-network
 
   # Usuarios API
-
   users-api:
 
     image: users-api:latest
@@ -48,12 +45,12 @@ services:
       - "5001:8080"
 
     environment:
-      ConnectionStrings__DefaultConnection: "Server=users-db;Database=Usuarios;User Id=sa;Password=Sql@123456789;TrustServerCertificate=True;Encrypt=False"
-      Jwt__Key: "uma-chave-grande-e-secreta-para-jwt"
-      RabbitMQ__Host: "b-b7bb1ec1-8eb7-465b-9605-8d67ceab6493.mq.us-east-1.on.aws"
+      ConnectionStrings__DefaultConnection: "Server=users-db;Database=Usuarios;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=False"
+      Jwt__Key: "${JWT_KEY}"
+      RabbitMQ__Host: "${RABBITMQ_HOST}"
       RabbitMQ__VirtualHost: "/"
-      RabbitMQ__Username: "fiap-cloud-games"
-      RabbitMQ__Password: "FcgProjetoLambda2026"
+      RabbitMQ__Username: "${RABBITMQ_USER}"
+      RabbitMQ__Password: "${RABBITMQ_PASSWORD}"
 
     depends_on:
       - users-db
@@ -63,13 +60,12 @@ services:
       - fcg-network
 
   # Catalogo DATABASE
-
   catalog-db:
 
     image: mcr.microsoft.com/mssql/server:2025-latest
 
     environment:
-      SA_PASSWORD: "Sql@123456789"
+      SA_PASSWORD: ${SQL_SA_PASSWORD}
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
 
@@ -83,7 +79,6 @@ services:
       - fcg-network
 
   # Catalogo REDIS
-
   catalog-redis:
     image: redis:7-alpine
     container_name: fcg-catalog-redis
@@ -97,7 +92,6 @@ services:
       - fcg-network
 
   # Catalogo API
-
   catalog-api:
 
     image: catalog-api:latest
@@ -106,30 +100,32 @@ services:
       - "5002:8080"
 
     environment:
-      ConnectionStrings__DefaultConnection: "Server=catalog-db;Database=Catalogo;User Id=sa;Password=Sql@123456789;TrustServerCertificate=True;Encrypt=False"
+      ConnectionStrings__DefaultConnection: "Server=catalog-db;Database=Catalogo;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=False"
       Redis__ConnectionString: "catalog-redis:6379"
-      Jwt__Key: "uma-chave-grande-e-secreta-para-jwt"
-      RabbitMQ__Host: "b-b7bb1ec1-8eb7-465b-9605-8d67ceab6493.mq.us-east-1.on.aws"
+      Jwt__Key: "${JWT_KEY}"
+      RabbitMQ__Host: "${RABBITMQ_HOST}"
       RabbitMQ__VirtualHost: "/"
-      RabbitMQ__Username: "fiap-cloud-games"
-      RabbitMQ__Password: "FcgProjetoLambda2026"
+      RabbitMQ__Username: "${RABBITMQ_USER}"
+      RabbitMQ__Password: "${RABBITMQ_PASSWORD}"
+      MongoDb__ConnectionString: "mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@notification-db:27017/?authSource=admin"
+      MongoDb__DatabaseName: "Catalogo"
 
     depends_on:
       - catalog-db
       - catalog-redis
       - rabbitmq
+      - notification-db
 
     networks:
       - fcg-network
 
   # Pagamento DATABASE
-  
   payments-db:
 
     image: mcr.microsoft.com/mssql/server:2025-latest
 
     environment:
-      SA_PASSWORD: "Sql@123456789"
+      SA_PASSWORD: ${SQL_SA_PASSWORD}
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
       
@@ -144,7 +140,6 @@ services:
       - fcg-network
 
   # Pagamento API
-  
   payments-api:
 
     image: payments-api:latest
@@ -153,12 +148,12 @@ services:
       - "5003:8080"
 
     environment:
-      ConnectionStrings__DefaultConnection: "Server=payments-db;Database=pagamentos;User Id=sa;Password=Sql@123456789;TrustServerCertificate=True;Encrypt=False"
-      Jwt__Key: "uma-chave-grande-e-secreta-para-jwt"
-      RabbitMQ__Host: "b-b7bb1ec1-8eb7-465b-9605-8d67ceab6493.mq.us-east-1.on.aws"
+      ConnectionStrings__DefaultConnection: "Server=payments-db;Database=pagamentos;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=False"
+      Jwt__Key: "${JWT_KEY}"
+      RabbitMQ__Host: "${RABBITMQ_HOST}"
       RabbitMQ__VirtualHost: "/"
-      RabbitMQ__Username: "fiap-cloud-games"
-      RabbitMQ__Password: "FcgProjetoLambda2026"
+      RabbitMQ__Username: "${RABBITMQ_USER}"
+      RabbitMQ__Password: "${RABBITMQ_PASSWORD}"
 
     depends_on:
       - payments-db
@@ -168,7 +163,6 @@ services:
       - fcg-network
   
   # Notifications MONGO banco
-  
   notification-db:
 
     image: mongo:latest
@@ -182,8 +176,8 @@ services:
       mongod --wiredTigerCacheSizeGB 0.25
 
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: senha-db12345
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
 
     volumes:
       - notification-data:/data/db
@@ -192,7 +186,6 @@ services:
       - fcg-network
 
   # Notifications API
-
   notification-api:
 
     image: notification-api:latest
@@ -203,11 +196,11 @@ services:
     environment:
       MongoDb__ConnectionString: "mongodb://admin:senha-db12345@notification-db:27017/?authSource=admin"
       MongoDb__DatabaseName: "Notifications"
-      Jwt__Key: "uma-chave-grande-e-secreta-para-jwt"
+      Jwt__Key: "${JWT_KEY}"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__VirtualHost: "/"
-      RabbitMQ__Username: "fcgrabbtmq"
-      RabbitMQ__Password: "fcgrabbtmq"
+      RabbitMQ__Username: "${RABBITMQ_USER}"
+      RabbitMQ__Password: "${RABBITMQ_PASSWORD}"
 
 
     depends_on:
@@ -217,9 +210,7 @@ services:
     networks:
       - fcg-network
 
-  # ==========================================
-  # NOVO: API GATEWAY (KONG)
-  # ==========================================
+  # API GATEWAY (KONG)
   kong:
     image: kong:3.4
     container_name: kong-gateway
@@ -240,9 +231,7 @@ services:
     networks:
       - fcg-network
 
-  # ==========================================
   # PROMETHEUS
-  # ==========================================
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -257,6 +246,7 @@ services:
       - users-api
       - catalog-api
 
+  # GRAFANA
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
