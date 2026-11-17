@@ -1,0 +1,24 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: fcg-users-deployer
+  namespace: default
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["users-api"]
+    verbs: ["get", "patch", "update", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: fcg-users-deployer
+  namespace: default
+subjects:
+  - kind: Group
+    name: fcg-users-deployer
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: fcg-users-deployer
+  apiGroup: rbac.authorization.k8s.io

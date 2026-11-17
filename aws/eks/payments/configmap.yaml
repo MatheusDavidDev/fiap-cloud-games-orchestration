@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: payments-config
+  
+data:
+  RabbitMQ__Host: "b-5dea7f94-2e5d-4b14-93e8-0251f4ffd503.mq.us-east-1.on.aws"
+  RabbitMQ__Port: "5671"
+  RabbitMQ__UseSsl: "true"
+  RabbitMQ__VirtualHost: "/"
+  ASPNETCORE_ENVIRONMENT: "Development"

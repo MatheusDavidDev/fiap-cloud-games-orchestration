@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-nginx-config
+data:
+  default.conf: |
+    server {
+      listen 8080;
+
+      location /usuarios/ {
+        proxy_pass http://users-api:8080/;
+      }
+
+      location /catalogo/ {
+        proxy_pass http://catalog-api:8080/;
+      }
+    }

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: users-api
+
+spec:
+
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: users-api
+
+  template:
+
+    metadata:
+      labels:
+        app: users-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+
+    spec:
+
+      containers:
+
+      - name: users-api
+
+        image: 043089701673.dkr.ecr.us-east-1.amazonaws.com/fiap-cloud-games-users:7e73f45313dfece2e7dba1e3e68449253fc829b1
+        imagePullPolicy: Always
+
+        ports:
+
+        - containerPort: 8080
+
+
+        resources:
+
+          limits:
+            memory: "512Mi"
+
+          requests:
+            memory: "256Mi"
+
+
+        envFrom:
+
+        - configMapRef:
+            name: users-config
+
+        - secretRef:
+            name: users-secret

@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fcg-ingress
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /usuarios(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: users-api
+                port:
+                  number: 8080
+          - path: /catalogo(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: catalog-api
+                port:
+                  number: 8080
+          - path: /pagamentos(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: payments-api
+                port:
+                  number: 80
